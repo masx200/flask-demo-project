@@ -35,10 +35,10 @@ class UserInfoSchema(Schema):
     name = fields.Str(required=True)
 
 
-class UserResponseSchema(Schema):
-    id = fields.Int(dump_only=True)
-    username = fields.Str(required=True)
-    email = fields.Email(required=True)
+# class UserResponseSchema(Schema):
+#     id = fields.Int(dump_only=True)
+#     username = fields.Str(required=True)
+#     email = fields.Email(required=True)
 
 
 class UserCreateSchema(Schema):
@@ -869,7 +869,12 @@ def user_info():
     result = schema.dump({"name": "张三"})
     return jsonify(result)
 
-
+# 使用 SQLAlchemyAutoSchema 自动生成
+class UserResponseSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = User
+        fields = ("id", "username", "email")
+        load_instance = True  # 支持直接生成模型实例
 # User RESTful API endpoints
 @app.route("/api/users", methods=["GET"])
 def get_users():
