@@ -21,9 +21,18 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {},
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
                   "x-apifox-ignore-properties": [],
-                  "x-apifox-orders": []
+                  "x-apifox-orders": [
+                    "message"
+                  ]
                 }
               }
             },
@@ -51,9 +60,18 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {},
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
                   "x-apifox-ignore-properties": [],
-                  "x-apifox-orders": []
+                  "x-apifox-orders": [
+                    "message"
+                  ]
                 }
               }
             },
@@ -81,9 +99,18 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {},
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
                   "x-apifox-ignore-properties": [],
-                  "x-apifox-orders": []
+                  "x-apifox-orders": [
+                    "message"
+                  ]
                 }
               }
             },
@@ -122,9 +149,18 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {},
+                  "properties": {
+                    "framework": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "framework"
+                  ],
                   "x-apifox-ignore-properties": [],
-                  "x-apifox-orders": []
+                  "x-apifox-orders": [
+                    "framework"
+                  ]
                 }
               }
             },
@@ -540,9 +576,18 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {},
+                  "properties": {
+                    "method": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "method"
+                  ],
                   "x-apifox-ignore-properties": [],
-                  "x-apifox-orders": []
+                  "x-apifox-orders": [
+                    "method"
+                  ]
                 }
               }
             },
@@ -568,9 +613,18 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {},
+                  "properties": {
+                    "method": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "method"
+                  ],
                   "x-apifox-ignore-properties": [],
-                  "x-apifox-orders": []
+                  "x-apifox-orders": [
+                    "method"
+                  ]
                 }
               }
             },

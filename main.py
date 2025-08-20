@@ -6,6 +6,9 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_swagger_ui import get_swaggerui_blueprint
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped, mapped_column
+from marshmallow import Schema, fields, validates, ValidationError
+from flask_marshmallow import Marshmallow
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 
 
 class Base(DeclarativeBase):
@@ -22,6 +25,45 @@ class User(db.Model):
 
 
 app = Flask(__name__)
+
+# Initialize Marshmallow
+ma = Marshmallow(app)
+
+# Define Schema classes
+class UserInfoSchema(Schema):
+    name = fields.Str(required=True)
+
+class UserResponseSchema(Schema):
+    id = fields.Int(dump_only=True)
+    username = fields.Str(required=True)
+    email = fields.Email(required=True)
+
+class UserCreateSchema(Schema):
+    username = fields.Str(required=True, )
+    email = fields.Email(required=True)
+    
+   
+
+class UserUpdateSchema(Schema):
+    username = fields.Str(validate=lambda x: len(x) >= 3 if x else None)
+    email = fields.Email()
+    
+   
+
+class MethodResponseSchema(Schema):
+    method = fields.Str(required=True)
+
+class FrameworkResponseSchema(Schema):
+    framework = fields.Str(required=True)
+
+class MessageResponseSchema(Schema):
+    message = fields.Str(required=True)
+
+class UserIdSchema(Schema):
+    id = fields.Str(required=True)
+
+class UserIdParamSchema(Schema):
+    user_id = fields.Int(required=True, validate=lambda x: x > 0)
 app.config['SQLALCHEMY_ECHO'] = True
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 # configure the SQLite database, relative to the app instance folder
@@ -60,7 +102,9 @@ if args.document.lower() == "true":
     @app.route("/static/swagger.json")
     def swagger_json():
         json_text = """
-        {
+      
+
+{
   "openapi": "3.1.0",
   "info": {
     "title": "flask-demo-project",
@@ -83,9 +127,18 @@ if args.document.lower() == "true":
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {},
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
                   "x-apifox-ignore-properties": [],
-                  "x-apifox-orders": []
+                  "x-apifox-orders": [
+                    "message"
+                  ]
                 }
               }
             },
@@ -113,9 +166,18 @@ if args.document.lower() == "true":
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {},
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
                   "x-apifox-ignore-properties": [],
-                  "x-apifox-orders": []
+                  "x-apifox-orders": [
+                    "message"
+                  ]
                 }
               }
             },
@@ -143,9 +205,18 @@ if args.document.lower() == "true":
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {},
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
                   "x-apifox-ignore-properties": [],
-                  "x-apifox-orders": []
+                  "x-apifox-orders": [
+                    "message"
+                  ]
                 }
               }
             },
@@ -184,9 +255,18 @@ if args.document.lower() == "true":
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {},
+                  "properties": {
+                    "framework": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "framework"
+                  ],
                   "x-apifox-ignore-properties": [],
-                  "x-apifox-orders": []
+                  "x-apifox-orders": [
+                    "framework"
+                  ]
                 }
               }
             },
@@ -602,9 +682,18 @@ if args.document.lower() == "true":
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {},
+                  "properties": {
+                    "method": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "method"
+                  ],
                   "x-apifox-ignore-properties": [],
-                  "x-apifox-orders": []
+                  "x-apifox-orders": [
+                    "method"
+                  ]
                 }
               }
             },
@@ -630,9 +719,18 @@ if args.document.lower() == "true":
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {},
+                  "properties": {
+                    "method": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "method"
+                  ],
                   "x-apifox-ignore-properties": [],
-                  "x-apifox-orders": []
+                  "x-apifox-orders": [
+                    "method"
+                  ]
                 }
               }
             },
@@ -694,7 +792,10 @@ if args.document.lower() == "true":
   "servers": [],
   "security": []
 }
-"""
+
+
+
+        """
         swagger_spec = json.loads(json_text)
         return jsonify(swagger_spec)
 
@@ -702,77 +803,104 @@ if args.document.lower() == "true":
 # 保持原有的路由
 @app.route("/")
 def index():
-    return "Hello, World!"
+    schema = MessageResponseSchema()
+    result = schema.dump({"message": "Hello, World!"})
+    return jsonify(result)
 
 
 @app.route("/hi")
 def hi():
-    return "Hi!"
+    schema = MessageResponseSchema()
+    result = schema.dump({"message": "Hi!"})
+    return jsonify(result)
 
 
 @app.route("/hello", methods=["POST"])
 def hello():
-    return "Hello, World!"
+    schema = MessageResponseSchema()
+    result = schema.dump({"message": "Hello, World!"})
+    return jsonify(result)
 
 
 @app.route("/user/<id>")
 def user(id):
+    # Validate path parameter
+    try:
+        param_schema = UserIdSchema()
+        param_schema.load({"id": id})
+    except ValidationError as err:
+        return jsonify({"error": "invalid id parameter", "details": err.messages}), 400
+    
+    # Determine framework based on id
     if id == "1":
-        return "python"
+        framework = "python"
     elif id == "2":
-        return "django"
+        framework = "django"
     elif id == "3":
-        return "flask"
+        framework = "flask"
     else:
-        return "hello world"
+        framework = "hello world"
+    
+    schema = FrameworkResponseSchema()
+    result = schema.dump({"framework": framework})
+    return jsonify(result)
 
 
 @app.route("/method", methods=["GET", "POST"])
 def get_method():
-    from flask import request
+    schema = MethodResponseSchema()
+    result = schema.dump({"method": request.method})
+    return jsonify(result)
 
-    return f"Request method: {request.method}"
 
-
-@app.route("/user-info", methods=["GET"])
+@app.route("/user-info", methods=["get"])
 def user_info():
-    return jsonify({"name": "张三"})
+    schema = UserInfoSchema()
+    result = schema.dump({"name": "张三"})
+    return jsonify(result)
 
 
 # User RESTful API endpoints
 @app.route("/api/users", methods=["GET"])
 def get_users():
     users = User.query.all()
-    return jsonify(
-        [
-            {"id": user.id, "username": user.username, "email": user.email}
-            for user in users
-        ]
-    )
+    schema = UserResponseSchema(many=True)
+    result = schema.dump(users)
+    return jsonify(result)
 
 
 @app.route("/api/users", methods=["POST"])
 def create_user():
     data = request.get_json()
-    if not data or "username" not in data or "email" not in data:
-        return jsonify({"error": "Missing required fields"}), 400
+    
+    # Validate request data
+    try:
+        schema = UserCreateSchema()
+        validated_data = schema.load(data)
+    except ValidationError as err:
+        return jsonify({"error": "Validation error", "details": err.messages}), 400
 
     # 检查用户名是否已存在
-    existing_user = User.query.filter_by(username=data["username"]).first()
+    existing_user = User.query.filter_by(username=validated_data["username"]).first()
     if existing_user:
         return jsonify({"error": "Username already exists"}), 400
 
-    user = User(username=data["username"], email=data["email"])
+    user = User(username=validated_data["username"], email=validated_data["email"])
     db.session.add(user)
     db.session.commit()
 
-    return jsonify({"id": user.id, "username": user.username, "email": user.email}), 201
+    # Return response with schema
+    response_schema = UserResponseSchema()
+    result = response_schema.dump(user)
+    return jsonify(result), 201
 
 
 @app.route("/api/users/<int:user_id>", methods=["GET"])
 def get_user(user_id):
     user = User.query.get_or_404(user_id)
-    return jsonify({"id": user.id, "username": user.username, "email": user.email})
+    schema = UserResponseSchema()
+    result = schema.dump(user)
+    return jsonify(result)
 
 
 @app.route("/api/users/<int:user_id>", methods=["PUT"])
@@ -783,26 +911,43 @@ def update_user(user_id):
     if not data:
         return jsonify({"error": "No data provided"}), 400
 
-    if "username" in data:
+    # Validate request data
+    try:
+        schema = UserUpdateSchema()
+        validated_data = schema.load(data)
+    except ValidationError as err:
+        return jsonify({"error": "Validation error", "details": err.messages}), 400
+
+    if "username" in validated_data:
         # 检查新用户名是否与其他用户冲突
-        existing_user = User.query.filter_by(username=data["username"]).first()
+        existing_user = User.query.filter_by(username=validated_data["username"]).first()
         if existing_user and existing_user.id != user_id:
             return jsonify({"error": "Username already exists"}), 400
-        user.username = data["username"]
+        user.username = validated_data["username"]
 
-    if "email" in data:
-        user.email = data["email"]
+    if "email" in validated_data:
+        user.email = validated_data["email"]
 
     db.session.commit()
-    return jsonify({"id": user.id, "username": user.username, "email": user.email})
+    
+    # Return response with schema
+    response_schema = UserResponseSchema()
+    result = response_schema.dump(user)
+    return jsonify(result)
 
-
+class DeleteResponseSchema(Schema):
+    message = fields.Str(required=True)
+    id = fields.Int(required=True)
 @app.route("/api/users/<int:user_id>", methods=["DELETE"])
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
     db.session.delete(user)
     db.session.commit()
-    return jsonify({"message": "User deleted successfully", "id": user_id}), 200
+    
+    # Return response with schema
+    schema = DeleteResponseSchema()
+    result = schema.dump({"message": "User deleted successfully", "id": user_id})
+    return jsonify(result), 200
 
 
 def main():
