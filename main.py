@@ -2,13 +2,13 @@ import argparse
 import json
 
 from flask import Flask, jsonify, request
+from flask_marshmallow import Marshmallow
 from flask_sqlalchemy import SQLAlchemy
 from flask_swagger_ui import get_swaggerui_blueprint
+from marshmallow import Schema, fields, validates, ValidationError
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped, mapped_column
-from marshmallow import Schema, fields, validates, ValidationError
-from flask_marshmallow import Marshmallow
-from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 
 
 class Base(DeclarativeBase):
@@ -29,42 +29,51 @@ app = Flask(__name__)
 # Initialize Marshmallow
 ma = Marshmallow(app)
 
+
 # Define Schema classes
 class UserInfoSchema(Schema):
     name = fields.Str(required=True)
+
 
 class UserResponseSchema(Schema):
     id = fields.Int(dump_only=True)
     username = fields.Str(required=True)
     email = fields.Email(required=True)
 
+
 class UserCreateSchema(Schema):
-    username = fields.Str(required=True, )
+    username = fields.Str(
+        required=True,
+    )
     email = fields.Email(required=True)
-    
-   
+
 
 class UserUpdateSchema(Schema):
     username = fields.Str(validate=lambda x: len(x) >= 3 if x else None)
     email = fields.Email()
-    
-   
+
 
 class MethodResponseSchema(Schema):
     method = fields.Str(required=True)
 
+
 class FrameworkResponseSchema(Schema):
     framework = fields.Str(required=True)
+
 
 class MessageResponseSchema(Schema):
     message = fields.Str(required=True)
 
+
 class UserIdSchema(Schema):
     id = fields.Str(required=True)
 
+
 class UserIdParamSchema(Schema):
     user_id = fields.Int(required=True, validate=lambda x: x > 0)
-app.config['SQLALCHEMY_ECHO'] = True
+
+
+app.config["SQLALCHEMY_ECHO"] = True
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 # configure the SQLite database, relative to the app instance folder
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///project.db"
@@ -99,6 +108,7 @@ if args.document.lower() == "true":
 
 # 根据命令行参数决定是否创建swagger.json路由
 if args.document.lower() == "true":
+
     @app.route("/static/swagger.json")
     def swagger_json():
         json_text = """
@@ -830,7 +840,7 @@ def user(id):
         param_schema.load({"id": id})
     except ValidationError as err:
         return jsonify({"error": "invalid id parameter", "details": err.messages}), 400
-    
+
     # Determine framework based on id
     if id == "1":
         framework = "python"
@@ -840,7 +850,7 @@ def user(id):
         framework = "flask"
     else:
         framework = "hello world"
-    
+
     schema = FrameworkResponseSchema()
     result = schema.dump({"framework": framework})
     return jsonify(result)
@@ -872,7 +882,7 @@ def get_users():
 @app.route("/api/users", methods=["POST"])
 def create_user():
     data = request.get_json()
-    
+
     # Validate request data
     try:
         schema = UserCreateSchema()
@@ -920,7 +930,9 @@ def update_user(user_id):
 
     if "username" in validated_data:
         # 检查新用户名是否与其他用户冲突
-        existing_user = User.query.filter_by(username=validated_data["username"]).first()
+        existing_user = User.query.filter_by(
+            username=validated_data["username"]
+        ).first()
         if existing_user and existing_user.id != user_id:
             return jsonify({"error": "Username already exists"}), 400
         user.username = validated_data["username"]
@@ -929,21 +941,24 @@ def update_user(user_id):
         user.email = validated_data["email"]
 
     db.session.commit()
-    
+
     # Return response with schema
     response_schema = UserResponseSchema()
     result = response_schema.dump(user)
     return jsonify(result)
 
+
 class DeleteResponseSchema(Schema):
     message = fields.Str(required=True)
     id = fields.Int(required=True)
+
+
 @app.route("/api/users/<int:user_id>", methods=["DELETE"])
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
     db.session.delete(user)
     db.session.commit()
-    
+
     # Return response with schema
     schema = DeleteResponseSchema()
     result = schema.dump({"message": "User deleted successfully", "id": user_id})
@@ -951,7 +966,7 @@ def delete_user(user_id):
 
 
 def main():
-    debug_mode = args.debug.lower() == "true"
+    debug_mode = True if args.debug.lower() == "true" else None
     print(args)
     app.run(debug=debug_mode, port=args.port, host="0.0.0.0")
 
